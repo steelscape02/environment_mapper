@@ -11,5 +11,3 @@ If you use this project or Open3D, please cite:
   journal = {arXiv:1801.09847},
   year = {2018},
 }
-
-![software diagram](https://github.com/steelscape02/environment_mapper/blob/main/SoftwareDiagram.png)
