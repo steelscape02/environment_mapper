@@ -1,5 +1,7 @@
 # Environment Mapping
 
+![software diagram](https://github.com/steelscape02/environment_mapper/blob/main/SoftwareDiagram.png)
+
 ## Citation
 If you use this project or Open3D, please cite:
 ```bibtex
