@@ -1,6 +1,6 @@
 # Environment Mapping
 
-![software diagram](https://github.com/steelscape02/environment_mapper/blob/main/SoftwareDiagram.png)
+![software diagram](https://github.com/steelscape02/environment_mapper/blob/main/SoftwareBlockDiagram.pdf)
 
 ## Citation
 If you use this project or Open3D, please cite:
