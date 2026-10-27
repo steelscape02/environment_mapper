@@ -5,7 +5,9 @@
 	(uuid "e63e39d7-6ac0-4ffd-8aa3-1841a4541b55")
 	(paper "A4")
 	(title_block
+		(title "Environment Mapper Shield")
 		(date "mar. 31 mars 2015")
+		(rev "v1.0.0")
 	)
 	(lib_symbols
 		(symbol "Conn_01x08_1"
