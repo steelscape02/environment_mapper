@@ -7,12 +7,10 @@ uint16_t idx = 0;
 
 void setup() {
   Serial.begin(115200);
-  randomSeed(analogRead(0));
 }
 
 void loop() {
   Sample s = sphereSampleFibonacci(idx, N_POINTS, 1.0f);
-  // Sample s = sphereSampleRandom(1.0f, 0.01f);
 
   Serial.print(s.pan, 2);  Serial.print(',');
   Serial.print(s.tilt, 2); Serial.print(',');
