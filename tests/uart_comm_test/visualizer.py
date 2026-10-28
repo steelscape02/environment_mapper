@@ -18,6 +18,9 @@ ENCODING = "ASCII"
 #Testing radius
 R=1
 
+#queue size testing
+max_queue_len = 0
+
 def uart_read(encoding:str,port:str,baud:int = 9600,timeout:float=1):
     with serial.Serial(port, baud, timeout=timeout) as ser:
         while not stop.is_set():
@@ -34,9 +37,13 @@ def uart_read(encoding:str,port:str,baud:int = 9600,timeout:float=1):
 
 def update_callback(vis_obj):
     global points
+    global max_queue_len
 
     new = []
     while True:
+        if(q.qsize() > max_queue_len):
+            max_queue_len = q.qsize()
+
         try:
             pan, tilt, d = q.get_nowait()
         except queue.Empty:
@@ -51,7 +58,8 @@ def update_callback(vis_obj):
 
     return False
 
-def to_xyz(r, elevation, azimuth):
+def to_xyz(r:float, elevation:float, azimuth:float):
+    
     el = radians(elevation)
     az = radians(azimuth)
     x = r * cos(el) * cos(az)
@@ -83,3 +91,8 @@ vis.register_animation_callback(update_callback)
 vis.run()
 vis.destroy_window()
 stop.set()
+
+# --- End of run statistics --
+
+#.qsize() cannot guarantee a queue size, so it can only serve as a good faith estimate
+print(f"Maximum queue length (approx): {max_queue_len}")
