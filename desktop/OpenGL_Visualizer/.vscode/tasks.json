@@ -1,0 +1,23 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "process",
+            "label": "CMake: configure and build EnvMapper",
+            "command": "powershell.exe",
+            "args": [
+                "-NoProfile",
+                "-Command",
+                "cmake -S '${workspaceFolder}' -B '${workspaceFolder}\\build'; if ($LASTEXITCODE -eq 0) { cmake --build '${workspaceFolder}\\build' --config Debug }"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}
