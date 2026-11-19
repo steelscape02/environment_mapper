@@ -4,3 +4,5 @@ obj
 desktop/test_outputs
 __pycache__
 .history/
+build/
+shield/env_mapper_shield-backups/

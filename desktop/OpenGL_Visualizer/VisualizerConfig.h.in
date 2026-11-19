@@ -1,0 +1,2 @@
+#define EnvMapper_VERSION_MAJOR @EnvMapper_VERSION_MAJOR@
+#define EnvMapper_VERSION_MINOR @EnvMapper_VERSION_MINOR@
