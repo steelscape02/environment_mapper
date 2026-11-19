@@ -18,7 +18,6 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "stdio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -43,10 +42,20 @@
 
 /* Private variables ---------------------------------------------------------*/
 
+TIM_HandleTypeDef htim2;
+TIM_HandleTypeDef htim3;
+
 UART_HandleTypeDef huart4;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
+// Define max and minimum pan/tilt (full range of servos aren't used)
+pan_max = 255;
+pan_min = 0;
+tilt_max = 200; // This we need to figure out where things happen
+tilt_min = 255;
+
+
 // Buffer for UART transmission/reception
 
 uint8_t obuffer[8]; // onput buffer (this really is the input buffer, but I didn't want to change it since obuffer looks cooler than ibuffer)
@@ -61,6 +70,8 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_UART4_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_TIM2_Init(void);
+static void MX_TIM3_Init(void);
 /* USER CODE BEGIN PFP */
 #define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
 /* USER CODE END PFP */
@@ -78,7 +89,6 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -101,8 +111,15 @@ int main(void)
   MX_GPIO_Init();
   MX_UART4_Init();
   MX_USART2_UART_Init();
+  MX_TIM2_Init();
+  MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
-
+  // Initialize Timers
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
+  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
+  // set pan and tilt to 0
+  pan_amt = 0;
+  tilt_amt = 0;
   /* USER CODE END 2 */
 
   /* Initialize leds */
@@ -115,34 +132,27 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	pan_amt = 0;
-	tilt_amt = 0;
-	// Receive data, 0x56, 0x56, distance, distance
-	// Which is essentially a state machine
-	// Which is irrelevant to the actual program, just the more you know
-	/*while (1) {
-		HAL_UART_Receive(&huart4, obuffer, 1, 0xFFFF); // State 0
-		if (obuffer[0] == 59) { // Cortex M4 does not have speculative execution so this isn't terrible
-			// Do it again
-			HAL_UART_Receive(&huart4, obuffer, 1, 0xFFFF); // State 1
-			if (obuffer[0] == 59) { // Cortex M4 does not have speculative execution so this isn't terrible
-						// Now we actually recieve the data
-						HAL_UART_Receive(&huart4, obuffer, 1, 0xFFFF);
-						distance = obuffer[0];
-						HAL_UART_Receive(&huart4, obuffer, 1, 0xFFFF);
-						distance = obuffer[0];
-						break; // Break from loop to transmit data
-					}
-		}
-	}*/
-	// Recieve From UART4 (Pin A1), this only recieves the first bit for some reason,
-	// meaning we need to increase the 'obuffer'
+
+	// Adjust PWM based on pan and tilt
+	__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, pan_amt);
+	__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, tilt_amt);
+	// Get LIDAR Data
 	HAL_UART_Receive(&huart4, obuffer, 8, 0xFFFF);
-	// Transmit with newline
-	// printf("%d%d%d\n\r", pan_amt, tilt_amt, distance);
-	printf("%x-%x-%x-%x-%x-%x-%x-%x\n\r", obuffer[0], obuffer[1], obuffer[2], obuffer[3], obuffer[4], obuffer[5], obuffer[6], obuffer[7]);
-	// Delay
-	HAL_Delay(1000);
+	// Convert distance to int
+	distance = (obuffer[3] << 8) + obuffer[2]; // High + low using bit shifting to get 16 bit value
+	// Which will then be converted back to whatever
+	// Not implemented yet
+	printf("%d-%d-%d\n\r", pan_amt, tilt_amt, distance);
+	// Increment pan/tilt
+	pan_amt++;
+	tilt_amt++;
+	if(pan_amt > pan_max) {
+		pan_amt = pan_min;
+	}
+	if(tilt_amt > tilt_max) {
+		tilt_amt = tilt_min;
+	}
+	HAL_Delay(100);
 
     /* USER CODE END WHILE */
 
@@ -198,6 +208,104 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief TIM2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM2_Init(void)
+{
+
+  /* USER CODE BEGIN TIM2_Init 0 */
+
+  /* USER CODE END TIM2_Init 0 */
+
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+  TIM_OC_InitTypeDef sConfigOC = {0};
+
+  /* USER CODE BEGIN TIM2_Init 1 */
+
+  /* USER CODE END TIM2_Init 1 */
+  htim2.Instance = TIM2;
+  htim2.Init.Prescaler = 1279;
+  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim2.Init.Period = 2499;
+  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_PWM_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigOC.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC.Pulse = 0;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM2_Init 2 */
+
+  /* USER CODE END TIM2_Init 2 */
+  HAL_TIM_MspPostInit(&htim2);
+
+}
+
+/**
+  * @brief TIM3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM3_Init(void)
+{
+
+  /* USER CODE BEGIN TIM3_Init 0 */
+
+  /* USER CODE END TIM3_Init 0 */
+
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+  TIM_OC_InitTypeDef sConfigOC = {0};
+
+  /* USER CODE BEGIN TIM3_Init 1 */
+
+  /* USER CODE END TIM3_Init 1 */
+  htim3.Instance = TIM3;
+  htim3.Init.Prescaler = 1279;
+  htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim3.Init.Period = 2499;
+  htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_PWM_Init(&htim3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigOC.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC.Pulse = 0;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM3_Init 2 */
+
+  /* USER CODE END TIM3_Init 2 */
+  HAL_TIM_MspPostInit(&htim3);
+
 }
 
 /**
