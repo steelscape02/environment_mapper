@@ -33,6 +33,13 @@ To improve the power distribution to the servos and LiDAR, we included bulk and 
 - 3 1uF _ceramic_ capacitors (faster transient response)
 - 1 100uF _electrolytic_ capacitor (bigger bulk storage)
 
+### Putting it all together
+
+To assemble the Environment Mapper pan-tilt mount and lidar circuit, follow the instructions below.
+
+<!-- markdownlint-disable-next-line MD033 -->
+<img src="media/env-mapper.png" alt="Environment Mapper Schematic" width="50%" />
+
 ## Citations
 
 If you use this project or Open3D, please cite:

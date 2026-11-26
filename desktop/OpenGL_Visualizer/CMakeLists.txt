@@ -11,7 +11,8 @@ configure_file(
 )
 add_executable(EnvMapper
     src/main.cpp
-    src/uart_receiver.cpp
+    src/framereceiver.cpp
+    src/serial_port_win.cpp
 )
 
 target_compile_features(EnvMapper PRIVATE cxx_std_23)
